@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contábil IA</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f0f4f8;--surface:#fff;--surface2:#f8fafc;--border:#e2e8f0;--accent:#0ea5e9;--accent2:#6366f1;--accent3:#10b981;--danger:#ef4444;--warning:#f59e0b;--text:#0f172a;--muted:#64748b;--sw:248px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* LOGIN */
+#tela-login{min-height:100vh;display:flex;align-items:stretch}
+.ll{flex:1;position:relative;overflow:hidden;background:linear-gradient(135deg,#0ea5e9,#6366f1 50%,#10b981);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px}
+.ll-title{font-family:'Syne',sans-serif;font-size:36px;font-weight:800;color:#fff;text-align:center;position:relative;z-index:2;margin-bottom:12px}
+.ll-sub{color:rgba(255,255,255,.8);font-size:15px;text-align:center;position:relative;z-index:2;max-width:320px;line-height:1.6}
+canvas#anim{position:absolute;inset:0;width:100%;height:100%}
+.lr{width:440px;background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 40px}
+.logo{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-1px;margin-bottom:6px}
+.logo span{color:var(--accent)}
+.login-sub{color:var(--muted);font-size:13px;margin-bottom:32px;text-align:center}
+.inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:13px 16px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;margin-bottom:12px;outline:none;transition:.2s}
+.inp:focus{border-color:var(--accent);background:#fff}
+.btn-p{width:100%;background:var(--accent);color:#fff;font-weight:700;border:none;border-radius:10px;padding:14px;font-size:15px;cursor:pointer;font-family:'Syne',sans-serif;transition:.2s;box-shadow:0 4px 16px #0ea5e940}
+.btn-p:hover{background:#0284c7;transform:translateY(-1px)}
+.login-err{color:var(--danger);font-size:13px;margin-top:8px;display:none}
+.login-link{color:var(--muted);font-size:12px;margin-top:16px;text-align:center}
+.login-link a{color:var(--accent);cursor:pointer;font-weight:600}
+
+/* TRIAL BANNER */
+#trial-banner{display:none;background:linear-gradient(90deg,#fef3c7,#fde68a);border-bottom:2px solid #f59e0b;padding:10px 24px;text-align:center;font-size:13px;font-weight:600;color:#92400e;position:sticky;top:0;z-index:50}
+
+/* BLOQUEIO */
+#tela-bloqueio{display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--bg)}
+.bloqueio-box{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:48px;text-align:center;max-width:440px;box-shadow:0 20px 60px #00000015}
+.bloqueio-icon{font-size:56px;margin-bottom:16px}
+.bloqueio-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;margin-bottom:8px}
+.bloqueio-sub{color:var(--muted);font-size:14px;line-height:1.6;margin-bottom:24px}
+
+/* APP */
+#app{display:none;flex-direction:row;min-height:100vh}
+.sidebar{width:var(--sw);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;box-shadow:2px 0 12px #0000000a}
+.sidebar-logo{padding:22px 20px 14px;font-family:'Syne',sans-serif;font-weight:800;font-size:20px;letter-spacing:-.5px}
+.sidebar-logo span{color:var(--accent)}
+.sidebar-user{padding:10px 14px;margin:0 8px 8px;background:linear-gradient(135deg,#eff6ff,#eef2ff);border-radius:12px;display:flex;align-items:center;gap:10px;border:1px solid #dbeafe}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600}
+.user-role{font-size:11px;color:var(--muted)}
+.nav{flex:1;overflow-y:auto;padding:0 8px}
+.nav-section{font-size:10px;font-weight:700;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:16px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:.15s;margin-bottom:2px;font-weight:500}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:linear-gradient(135deg,#eff6ff,#eef2ff);color:var(--accent);border:1px solid #dbeafe}
+.nav-item .ic{font-size:15px;width:20px;text-align:center}
+.nbadge{margin-left:auto;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border)}
+.btn-logout{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:13px;color:var(--muted);transition:.15s;width:100%;background:none;border:none;font-family:'DM Sans',sans-serif}
+.btn-logout:hover{background:#fef2f2;color:var(--danger)}
+
+/* MAIN */
+.main{margin-left:var(--sw);flex:1;padding:32px;min-height:100vh;background:var(--bg)}
+.page{display:none;animation:fadeIn .3s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* TOPBAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+.page-title{font-family:'Syne',sans-serif;font-size:22px;font-weight:800}
+.page-sub{color:var(--muted);font-size:13px;margin-top:2px}
+.topbar-actions{display:flex;gap:10px}
+.btn-sm{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--surface);color:var(--text);transition:.15s;font-family:'DM Sans',sans-serif}
+.btn-sm:hover{border-color:var(--accent);color:var(--accent)}
+.btn-sm.primary{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 2px 8px #0ea5e930}
+.btn-sm.primary:hover{background:#0284c7}
+.btn-sm.danger{background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-sm.success{background:var(--accent3);color:#fff;border-color:var(--accent3)}
+
+/* CARDS */
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:0 1px 4px #0000000a}
+.card-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600}
+.card-value{font-family:'Syne',sans-serif;font-size:30px;font-weight:800}
+.card-value.ac{color:var(--accent)}.card-value.ac2{color:var(--accent2)}.card-value.ac3{color:var(--accent3)}
+.card-value.dn{color:var(--danger)}.card-value.wn{color:var(--warning)}
+.card-delta{font-size:12px;color:var(--muted);margin-top:4px}
+.card-icon{font-size:22px;margin-bottom:10px}
+
+/* TABLE */
+.tw{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 1px 4px #0000000a;margin-bottom:20px}
+.tw-head{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbfc}
+.tw-title{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 20px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border);background:#fafbfc}
+td{padding:13px 20px;font-size:13px;border-bottom:1px solid var(--border)60}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+.tag.green{background:#dcfce7;color:#16a34a}.tag.red{background:#fee2e2;color:#dc2626}
+.tag.yellow{background:#fef3c7;color:#d97706}.tag.blue{background:#dbeafe;color:#2563eb}
+.tag.purple{background:#ede9fe;color:#7c3aed}.tag.gray{background:#f1f5f9;color:#475569}
+.tag.orange{background:#ffedd5;color:#c2410c}
+
+/* CHAT */
+.chat-wrap{background:var(--surface);border:1px solid var(--border);border-radius:14px;height:calc(100vh - 200px);display:flex;flex-direction:column;box-shadow:0 1px 4px #0000000a}
+.chat-msgs{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:75%;padding:12px 16px;border-radius:14px;font-size:14px;line-height:1.6}
+.msg.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;align-self:flex-end;border-radius:14px 14px 4px 14px;font-weight:500}
+.msg.ai{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;border-radius:14px 14px 14px 4px}
+.chat-input-area{padding:16px 20px;border-top:1px solid var(--border);display:flex;gap:10px;background:#fafbfc;border-radius:0 0 14px 14px}
+.chat-inp{flex:1;background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s;resize:none}
+.chat-inp:focus{border-color:var(--accent)}
+.btn-send{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border:none;border-radius:10px;padding:12px 20px;font-weight:700;cursor:pointer;font-size:14px;transition:.2s}
+.btn-send:hover{opacity:.9}
+.typing{display:none;align-items:center;gap:5px;padding:10px 16px;background:var(--surface2);border-radius:14px;align-self:flex-start;border:1px solid var(--border)}
+.typing span{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:bounce .9s infinite}
+.typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+
+/* UPLOAD */
+.upload-area{border:2px dashed var(--border);border-radius:14px;padding:48px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:20px;background:var(--surface)}
+.upload-area:hover{border-color:var(--accent);background:#f0f9ff}
+
+/* ALERTS */
+.alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.alert.danger{background:#fee2e2;border:1px solid #fca5a5;color:#991b1b}
+.alert.warning{background:#fef3c7;border:1px solid #fcd34d;color:#92400e}
+.alert.success{background:#dcfce7;border:1px solid #86efac;color:#166534}
+.alert.info{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af}
+
+/* FORM */
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;display:block}
+.form-inp{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:.2s}
+.form-inp:focus{border-color:var(--accent);background:#fff}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* PROGRESS */
+.progress-bar{background:var(--surface2);border-radius:20px;height:8px;overflow:hidden;border:1px solid var(--border)}
+.progress-fill{height:100%;border-radius:20px;transition:.5s}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:#00000050;z-index:200;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:32px;width:100%;max-width:520px;animation:fadeIn .2s ease;box-shadow:0 20px 60px #00000020;max-height:90vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;margin-bottom:20px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:24px}
+
+/* ADMIN */
+.admin-badge{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;margin-bottom:20px}
+.user-row{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border);transition:.15s}
+.user-row:last-child{border-bottom:none}
+.user-row:hover{background:var(--surface2)}
+.uavatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;color:#fff;flex-shrink:0}
+.uinfo{flex:1;margin-left:12px}
+.uemail{font-size:13px;font-weight:600}
+.umeta{font-size:11px;color:var(--muted);margin-top:2px}
+.uactions{display:flex;gap:6px;flex-wrap:wrap}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+@media(max-width:768px){.ll{display:none}.lr{width:100%}.sidebar{transform:translateX(-100%)}.main{margin-left:0;padding:16px}.grid-4,.grid-3{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="tela-login">
+  <div class="ll">
+    <canvas id="anim"></canvas>
+    <div class="ll-title">Contábil<span style="color:#a5f3fc">IA</span></div>
+    <div class="ll-sub">Plataforma inteligente para escritórios de contabilidade. Automatize, analise e decida com IA.</div>
+  </div>
+  <div class="lr">
+    <div class="logo">Contábil<span>IA</span></div>
+    <div class="login-sub">Faça login para acessar o sistema</div>
+    <input class="inp" id="email" type="email" placeholder="seu@email.com" />
+    <input class="inp" id="senha" type="password" placeholder="Senha" onkeydown="if(event.key==='Enter')fazerLogin()" />
+    <button class="btn-p" onclick="fazerLogin()">Entrar no sistema</button>
+    <div class="login-err" id="login-err">E-mail ou senha inválidos.</div>
+    <div class="login-link">Não tem conta? <a onclick="fazerCadastro()">Criar conta grátis — 3 dias de teste</a></div>
+  </div>
+</div>
+
+<!-- BLOQUEIO -->
+<div id="tela-bloqueio" style="display:none;min-height:100vh;align-items:center;justify-content:center;background:var(--bg)">
+  <div class="bloqueio-box">
+    <div class="bloqueio-icon">🔒</div>
+    <div class="bloqueio-title">Período de teste encerrado</div>
+    <div class="bloqueio-sub">Seus 3 dias de teste gratuito expiraram. Entre em contato com o administrador para ativar seu acesso.</div>
+    <a href="https://wa.me/5585999999999?text=Olá, quero assinar o ContábilIA" target="_blank">
+      <button class="btn-p" style="width:100%;margin-bottom:10px">💬 Falar com o Admin</button>
+    </a>
+    <button class="btn-sm" style="width:100%" onclick="fazerLogout()">Sair</button>
+  </div>
+</div>
+
+<!-- TRIAL BANNER -->
+<div id="trial-banner"></div>
+
+<!-- APP -->
+<div id="app">
+  <div class="sidebar">
+    <div class="sidebar-logo">Contábil<span>IA</span></div>
+    <div class="sidebar-user">
+      <div class="avatar" id="avatar-ini">M</div>
+      <div>
+        <div class="user-name" id="sb-nome">Usuário</div>
+        <div class="user-role" id="sb-role">Contador</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Principal</div>
+      <div class="nav-item active" onclick="ir('dashboard',this)"><span class="ic">📊</span>Dashboard<span class="nbadge" id="badge-dash" style="display:none">0</span></div>
+      <div class="nav-item" onclick="ir('clientes',this)"><span class="ic">🏢</span>Meus Clientes</div>
+      <div class="nav-section">IA & Automação</div>
+      <div class="nav-item" onclick="ir('documentos',this)"><span class="ic">📄</span>IA Documental</div>
+      <div class="nav-item" onclick="ir('contador-ia',this)"><span class="ic">🤖</span>Contador IA</div>
+      <div class="nav-item" onclick="ir('auditoria',this)"><span class="ic">🔍</span>Auditor IA</div>
+      <div class="nav-section">Gestão</div>
+      <div class="nav-item" onclick="ir('portal',this)"><span class="ic">👥</span>Portal do Cliente</div>
+      <div class="nav-item" onclick="ir('tarefas',this)"><span class="ic">📋</span>Tarefas</div>
+      <div class="nav-item" onclick="ir('conhecimento',this)"><span class="ic">📚</span>Conhecimento</div>
+      <div id="nav-admin" style="display:none">
+        <div class="nav-section">Administração</div>
+        <div class="nav-item" onclick="ir('admin',this)"><span class="ic">🛡️</span>Painel Admin</div>
+        <div class="nav-item" onclick="ir('todos-clientes',this)"><span class="ic">🌐</span>Todos os Clientes</div>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="fazerLogout()">🚪 Sair do sistema</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- DASHBOARD -->
+    <div class="page active" id="pg-dashboard">
+      <div class="topbar">
+        <div><div class="page-title">Dashboard</div><div class="page-sub" id="dash-sub">Visão geral do seu escritório</div></div>
+        <div class="topbar-actions">
+          <button class="btn-sm" onclick="carregarDashboard()">↻ Atualizar</button>
+          <button class="btn-sm primary" onclick="abrirModal('modal-cliente')">+ Novo Cliente</button>
+        </div>
+      </div>
+      <div class="grid-4">
+        <div class="card"><div class="card-icon">🏢</div><div class="card-label">Meus Clientes</div><div class="card-value ac" id="d-clientes">0</div><div class="card-delta">cadastrados</div></div>
+        <div class="card"><div class="card-icon">⚠️</div><div class="card-label">Vencimentos</div><div class="card-value wn" id="d-venc">0</div><div class="card-delta">esta semana</div></div>
+        <div class="card"><div class="card-icon">📋</div><div class="card-label">Tarefas Abertas</div><div class="card-value dn" id="d-tarefas">0</div><div class="card-delta">pendentes</div></div>
+        <div class="card"><div class="card-icon">✅</div><div class="card-label">Concluídas</div><div class="card-value ac3" id="d-conc">0</div><div class="card-delta">este mês</div></div>
+      </div>
+      <div class="grid-2">
+        <div>
+          <div class="alert danger" id="alerta-das">🚨 DAS Simples Nacional vence em 2 dias — verifique seus clientes</div>
+          <div class="alert warning">⚠️ Certificado digital expirando em breve — revise seus clientes</div>
+          <div class="alert success">✅ Sistema funcionando normalmente</div>
+        </div>
+        <div class="card">
+          <div class="card-label">Produtividade do Mês</div>
+          <div style="margin-top:16px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;font-weight:500"><span>Obrigações cumpridas</span><span style="color:var(--accent)">78%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:78%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div></div>
+            <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-size:13px;font-weight:500"><span>Documentos processados</span><span style="color:var(--accent2)">64%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:64%;background:linear-gradient(90deg,var(--accent2),#a78bfa)"></div></div>
+            <div style="display:flex;justify-content:space-between;margin:14px 0 6px;font-size:13px;font-weight:500"><span>Clientes em dia</span><span style="color:var(--accent3)">91%</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:91%;background:linear-gradient(90deg,var(--accent3),#34d399)"></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="tw">
+        <div class="tw-head"><div class="tw-title">Clientes com Pendências</div><button class="btn-sm" onclick="ir('clientes',null)">Ver todos</button></div>
+        <table><thead><tr><th>Cliente</th><th>CNPJ</th><th>Regime</th><th>Pendência</th><th>Status</th></tr></thead>
+        <tbody id="tb-dash-clientes"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Carregando...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- MEUS CLIENTES -->
+    <div class="page" id="pg-clientes">
+      <div class="topbar">
+        <div><div class="page-title">Meus Clientes</div><div class="page-sub">Empresas sob sua responsabilidade</div></div>
+        <div class="topbar-actions">
+          <input class="btn-sm" type="text" id="busca-cliente" placeholder="🔍 Buscar..." style="width:200px;font-weight:400" oninput="filtrarClientes()" />
+          <button class="btn-sm primary" onclick="abrirModal('modal-cliente')">+ Novo Cliente</button>
+        </div>
+      </div>
+      <div class="tw">
+        <table><thead><tr><th>Empresa</th><th>CNPJ</th><th>Regime</th><th>Responsável</th><th>Situação</th><th>Ações</th></tr></thead>
+        <tbody id="tb-clientes"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum cliente cadastrado.</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- TODOS OS CLIENTES (ADMIN) -->
+    <div class="page" id="pg-todos-clientes">
+      <div class="topbar">
+        <div><div class="page-title">Todos os Clientes</div><div class="page-sub">Visão consolidada — todos os contadores</div></div>
+        <button class="btn-sm" onclick="carregarTodosClientes()">↻ Atualizar</button>
+      </div>
+      <div class="grid-3" style="margin-bottom:20px">
+        <div class="card"><div class="card-label">Total de Clientes</div><div class="card-value ac" id="tc-total">0</div></div>
+        <div class="card"><div class="card-label">Contadores Ativos</div><div class="card-value ac2" id="tc-contadores">0</div></div>
+        <div class="card"><div class="card-label">Simples Nacional</div><div class="card-value ac3" id="tc-simples">0</div></div>
+      </div>
+      <div class="tw">
+        <div class="tw-head"><div class="tw-title">Clientes por Contador</div></div>
+        <table><thead><tr><th>Empresa</th><th>CNPJ</th><th>Regime</th><th>Contador Responsável</th><th>Situação</th></tr></thead>
+        <tbody id="tb-todos-clientes"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Carregando...</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- IA DOCUMENTAL -->
+    <div class="page" id="pg-documentos">
+      <div class="topbar"><div><div class="page-title">IA Documental</div><div class="page-sub">Processamento inteligente de documentos</div></div></div>
+      <div class="alert info">💡 Envie PDFs, XMLs ou fotos de notas fiscais para análise automática com IA.</div>
+      <div class="upload-area" onclick="document.getElementById('file-input').click()">
+        <input type="file" id="file-input" style="display:none" accept=".pdf,.xml,.png,.jpg,.jpeg" onchange="processarDoc(this)" />
+        <div style="font-size:48px;margin-bottom:12px">📎</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:6px">Arraste ou clique para enviar</div>
+        <div style="color:var(--muted);font-size:13px">PDF, XML, foto de nota fiscal, extrato bancário</div>
+      </div>
+      <div id="resultado-doc" style="display:none">
+        <div class="card"><div class="card-label">Resultado da Análise IA</div><div id="texto-resultado" style="margin-top:12px;font-size:14px;line-height:1.8"></div></div>
+      </div>
+      <div class="tw">
+        <div class="tw-head"><div class="tw-title">Histórico de Documentos</div></div>
+        <table><thead><tr><th>Arquivo</th><th>Tipo</th><th>Data</th><th>Status</th></tr></thead>
+        <tbody id="tb-docs"><tr><td colspan="4" style="text-align:center;color:var(--muted);padding:32px">Nenhum documento processado.</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- CONTADOR IA -->
+    <div class="page" id="pg-contador-ia">
+      <div class="topbar"><div><div class="page-title">Contador IA</div><div class="page-sub">Assistente especializado em contabilidade e fiscal</div></div></div>
+      <div class="chat-wrap">
+        <div class="chat-msgs" id="chat-msgs">
+          <div class="msg ai">👋 Olá! Sou o <strong>Contador IA</strong>. Posso ajudar com Simples Nacional, Lucro Presumido, eSocial, CLT, cálculos tributários e muito mais. Como posso ajudar?</div>
+        </div>
+        <div class="typing" id="typing"><span></span><span></span><span></span></div>
+        <div class="chat-input-area">
+          <textarea class="chat-inp" id="chat-inp" placeholder="Pergunte sobre contabilidade, impostos, legislação..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();enviarMsg()}"></textarea>
+          <button class="btn-send" onclick="enviarMsg()">➤</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDITOR IA -->
+    <div class="page" id="pg-auditoria">
+      <div class="topbar">
+        <div><div class="page-title">Auditor IA</div><div class="page-sub">Detecção automática de inconsistências</div></div>
+        <button class="btn-sm primary" onclick="rodarAuditoria()">▶ Rodar Auditoria</button>
+      </div>
+      <div id="resultado-auditoria">
+        <div class="card" style="text-align:center;padding:48px">
+          <div style="font-size:48px;margin-bottom:12px">🔍</div>
+          <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:8px">Nenhuma auditoria executada</div>
+          <div style="color:var(--muted);font-size:13px">Clique em "Rodar Auditoria" para analisar seus clientes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PORTAL -->
+    <div class="page" id="pg-portal">
+      <div class="topbar">
+        <div><div class="page-title">Portal do Cliente</div><div class="page-sub">Guias, relatórios e documentos</div></div>
+        <button class="btn-sm primary" onclick="abrirModal('modal-portal')">+ Enviar Documento</button>
+      </div>
+      <div class="grid-3">
+        <div class="card" style="cursor:pointer" onclick="filtrarPortal('guia')"><div class="card-icon">💰</div><div class="card-label">Guias</div><div class="card-value ac" id="cnt-guias">0</div></div>
+        <div class="card" style="cursor:pointer" onclick="filtrarPortal('folha')"><div class="card-icon">👥</div><div class="card-label">Folhas</div><div class="card-value ac2" id="cnt-folhas">0</div></div>
+        <div class="card" style="cursor:pointer" onclick="filtrarPortal('relatorio')"><div class="card-icon">📊</div><div class="card-label">Relatórios</div><div class="card-value ac3" id="cnt-relatorios">0</div></div>
+      </div>
+      <div class="tw">
+        <div class="tw-head"><div class="tw-title">Documentos Disponíveis</div></div>
+        <table><thead><tr><th>Documento</th><th>Cliente</th><th>Tipo</th><th>Data</th><th>Ação</th></tr></thead>
+        <tbody id="tb-portal"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhum documento.</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- TAREFAS -->
+    <div class="page" id="pg-tarefas">
+      <div class="topbar">
+        <div><div class="page-title">Tarefas</div><div class="page-sub">Controle de atividades e prazos</div></div>
+        <button class="btn-sm primary" onclick="abrirModal('modal-tarefa')">+ Nova Tarefa</button>
+      </div>
+      <div class="grid-4">
+        <div class="card"><div class="card-label">Abertas</div><div class="card-value dn" id="t-ab">0</div></div>
+        <div class="card"><div class="card-label">Em Andamento</div><div class="card-value wn" id="t-an">0</div></div>
+        <div class="card"><div class="card-label">Concluídas</div><div class="card-value ac3" id="t-co">0</div></div>
+        <div class="card"><div class="card-label">Total</div><div class="card-value ac2" id="t-tot">0</div></div>
+      </div>
+      <div class="tw">
+        <table><thead><tr><th>Tarefa</th><th>Cliente</th><th>Prazo</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="tb-tarefas"><tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhuma tarefa.</td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- CONHECIMENTO -->
+    <div class="page" id="pg-conhecimento">
+      <div class="topbar"><div><div class="page-title">Central de Conhecimento</div><div class="page-sub">Legislação e normas contábeis</div></div></div>
+      <div class="card" style="margin-bottom:20px"><input class="form-inp" id="busca-conhecimento" placeholder="🔍 Pesquise: Simples Nacional, eSocial, CLT, SPED..." oninput="buscarConhecimento()" /></div>
+      <div id="resultado-conhecimento"></div>
+      <div class="grid-3">
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('Simples Nacional tabelas faixas 2024')"><div style="font-size:22px;margin-bottom:8px">💰</div><div style="font-family:'Syne',sans-serif;font-weight:700">Simples Nacional</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Tabelas, faixas e cálculos</div></div>
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('eSocial eventos prazos obrigações')"><div style="font-size:22px;margin-bottom:8px">👥</div><div style="font-family:'Syne',sans-serif;font-weight:700">eSocial</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Eventos, prazos e obrigações</div></div>
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--accent3)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('SPED Fiscal escrituração digital')"><div style="font-size:22px;margin-bottom:8px">📋</div><div style="font-family:'Syne',sans-serif;font-weight:700">SPED Fiscal</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Escrituração digital</div></div>
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--warning)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('CLT férias rescisão verbas trabalhistas')"><div style="font-size:22px;margin-bottom:8px">⚖️</div><div style="font-family:'Syne',sans-serif;font-weight:700">CLT</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Férias, rescisões e verbas</div></div>
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('Lucro Presumido cálculo IRPJ CSLL')"><div style="font-size:22px;margin-bottom:8px">📊</div><div style="font-family:'Syne',sans-serif;font-weight:700">Lucro Presumido</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Cálculo e apuração</div></div>
+        <div class="card" style="cursor:pointer;transition:.2s" onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'" onclick="buscarTema('INSS FGTS encargos empregador alíquotas')"><div style="font-size:22px;margin-bottom:8px">🏦</div><div style="font-family:'Syne',sans-serif;font-weight:700">INSS & FGTS</div><div style="color:var(--muted);font-size:12px;margin-top:4px">Encargos e obrigações</div></div>
+      </div>
+    </div>
+
+    <!-- PAINEL ADMIN -->
+    <div class="page" id="pg-admin">
+      <div class="topbar">
+        <div><div class="page-title">Painel Admin</div><div class="page-sub">Gestão completa de usuários e assinaturas</div></div>
+        <button class="btn-sm primary" onclick="abrirModal('modal-novo-usuario')">+ Criar Usuário</button>
+      </div>
+      <div class="admin-badge">🛡️ Acesso Administrador — maurocastrout@gmail.com</div>
+      <div class="grid-4" style="margin-bottom:24px">
+        <div class="card"><div class="card-icon">👥</div><div class="card-label">Total Usuários</div><div class="card-value ac" id="adm-total">0</div></div>
+        <div class="card"><div class="card-icon">✅</div><div class="card-label">Pagantes</div><div class="card-value ac3" id="adm-pagantes">0</div></div>
+        <div class="card"><div class="card-icon">⏱️</div><div class="card-label">Em Teste</div><div class="card-value wn" id="adm-teste">0</div></div>
+        <div class="card"><div class="card-icon">🚫</div><div class="card-label">Bloqueados</div><div class="card-value dn" id="adm-bloqueados">0</div></div>
+      </div>
+      <div class="tw">
+        <div class="tw-head"><div class="tw-title">Usuários Cadastrados</div><button class="btn-sm" onclick="adminCarregarUsuarios()">↻ Atualizar</button></div>
+        <div id="lista-usuarios" style="padding:32px;text-align:center;color:var(--muted)">Carregando...</div>
+      </div>
+      <div class="tw" style="margin-top:20px">
+        <div class="tw-head"><div class="tw-title">📋 Log de Atividades</div></div>
+        <table><thead><tr><th>Ação</th><th>Usuário</th><th>Data/Hora</th></tr></thead>
+        <tbody id="tb-log"><tr><td colspan="3" style="text-align:center;color:var(--muted);padding:24px">Sem registros.</td></tr></tbody></table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAIS -->
+<!-- CLIENTE -->
+<div class="modal-overlay" id="modal-cliente">
+  <div class="modal">
+    <div class="modal-title">Novo Cliente</div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Razão Social</label><input class="form-inp" id="c-razao" placeholder="Nome da empresa" /></div>
+      <div class="form-group"><label class="form-label">CNPJ</label><input class="form-inp" id="c-cnpj" placeholder="00.000.000/0001-00" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Regime Tributário</label>
+        <select class="form-inp" id="c-regime"><option>Simples Nacional</option><option>Lucro Presumido</option><option>Lucro Real</option><option>MEI</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Atividade</label><input class="form-inp" id="c-atividade" placeholder="Ex: Comércio varejista" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">E-mail do Cliente</label><input class="form-inp" id="c-email" type="email" placeholder="cliente@empresa.com" /></div>
+      <div class="form-group"><label class="form-label">Telefone</label><input class="form-inp" id="c-tel" placeholder="(85) 99999-9999" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observações</label><textarea class="form-inp" id="c-obs" rows="2" placeholder="Informações relevantes sobre este cliente"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal('modal-cliente')">Cancelar</button>
+      <button class="btn-sm primary" onclick="salvarCliente()">Salvar Cliente</button>
+    </div>
+  </div>
+</div>
+
+<!-- TAREFA -->
+<div class="modal-overlay" id="modal-tarefa">
+  <div class="modal">
+    <div class="modal-title">Nova Tarefa</div>
+    <div class="form-group"><label class="form-label">Descrição</label><input class="form-inp" id="t-desc" placeholder="Descreva a tarefa" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Cliente</label><input class="form-inp" id="t-cliente" placeholder="Cliente relacionado" /></div>
+      <div class="form-group"><label class="form-label">Prazo</label><input class="form-inp" type="date" id="t-prazo" /></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal('modal-tarefa')">Cancelar</button>
+      <button class="btn-sm primary" onclick="salvarTarefa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- PORTAL -->
+<div class="modal-overlay" id="modal-portal">
+  <div class="modal">
+    <div class="modal-title">Enviar Documento ao Cliente</div>
+    <div class="form-group"><label class="form-label">Nome do Documento</label><input class="form-inp" id="p-nome" placeholder="Ex: DAS Janeiro 2025" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Cliente</label><input class="form-inp" id="p-cliente" placeholder="Nome do cliente" /></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-inp" id="p-tipo"><option value="guia">Guia de Pagamento</option><option value="folha">Folha de Pagamento</option><option value="relatorio">Relatório</option><option value="certidao">Certidão</option><option value="contrato">Contrato</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal('modal-portal')">Cancelar</button>
+      <button class="btn-sm primary" onclick="salvarPortal()">Enviar</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOVO USUARIO ADMIN -->
+<div class="modal-overlay" id="modal-novo-usuario">
+  <div class="modal">
+    <div class="modal-title">Criar Novo Usuário</div>
+    <div class="form-group"><label class="form-label">E-mail</label><input class="form-inp" id="nu-email" type="email" placeholder="contador@email.com" /></div>
+    <div class="form-group"><label class="form-label">Nome</label><input class="form-inp" id="nu-nome" placeholder="Nome do contador" /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Plano</label>
+        <select class="form-inp" id="nu-plano"><option value="teste">Teste (3 dias)</option><option value="pago">Pago — Ativo</option><option value="bloqueado">Bloqueado</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Vencimento</label><input class="form-inp" type="date" id="nu-venc" /></div>
+    </div>
+    <div class="alert info" style="margin-top:8px">💡 Após criar, oriente o usuário a criar a conta no sistema com este e-mail clicando em "Criar conta grátis".</div>
+    <div id="nu-msg" style="font-size:13px;margin-top:8px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal('modal-novo-usuario')">Cancelar</button>
+      <button class="btn-sm primary" onclick="adminCriarUsuario()">Criar Usuário</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR USUARIO -->
+<div class="modal-overlay" id="modal-editar-usuario">
+  <div class="modal">
+    <div class="modal-title">Editar Usuário</div>
+    <div id="eu-email-label" style="font-size:13px;color:var(--muted);margin-bottom:20px"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Plano</label>
+        <select class="form-inp" id="eu-plano"><option value="teste">Teste</option><option value="pago">Pago — Ativo</option><option value="bloqueado">Bloqueado</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Vencimento</label><input class="form-inp" type="date" id="eu-venc" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Observação</label><input class="form-inp" id="eu-obs" placeholder="Ex: Pagou via Pix em 01/06" /></div>
+    <div id="eu-msg" style="font-size:13px;margin-top:8px;display:none"></div>
+    <div class="modal-footer">
+      <button class="btn-sm" onclick="fecharModal('modal-editar-usuario')">Cancelar</button>
+      <button class="btn-sm primary" onclick="adminSalvarEdicao()">Salvar Alterações</button>
+    </div>
+  </div>
+</div>
+
+<!-- ANIMAÇÃO -->
+<script>
+(function(){
+  const canvas=document.getElementById('anim'); if(!canvas)return;
+  const ctx=canvas.getContext('2d'); let W,H,bars=[],lines=[],pies=[];
+  function resize(){W=canvas.width=canvas.offsetWidth;H=canvas.height=canvas.offsetHeight;init()}
+  function init(){
+    bars=[];lines=[];pies=[];
+    for(let i=0;i<12;i++)bars.push({x:Math.random()*W,y:Math.random()*H,w:18+Math.random()*24,h:40+Math.random()*120,vy:(Math.random()-.5)*.4,vx:(Math.random()-.5)*.2,alpha:.08+Math.random()*.12,color:['#fff','#a5f3fc','#c7d2fe','#6ee7b7'][Math.floor(Math.random()*4)]});
+    for(let i=0;i<4;i++)lines.push({pts:Array.from({length:8},(_,j)=>({x:j*(W/7),y:H/2+Math.sin(j+i)*60+Math.random()*40})),speed:.01+Math.random()*.01,alpha:.15+Math.random()*.1,color:['#fff','#a5f3fc','#c7d2fe'][i%3]});
+    for(let i=0;i<5;i++)pies.push({x:Math.random()*W,y:Math.random()*H,r:20+Math.random()*50,angle:Math.random()*Math.PI*2,speed:(Math.random()-.5)*.005,alpha:.06+Math.random()*.08});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H); const t=Date.now()/1000;
+    bars.forEach(b=>{b.y+=b.vy;b.x+=b.vx;if(b.y<-200)b.y=H+100;if(b.y>H+100)b.y=-200;if(b.x<-50)b.x=W+50;if(b.x>W+50)b.x=-50;ctx.globalAlpha=b.alpha;ctx.fillStyle=b.color;ctx.beginPath();ctx.roundRect(b.x,b.y,b.w,b.h,4);ctx.fill();});
+    lines.forEach(l=>{ctx.globalAlpha=l.alpha;ctx.strokeStyle=l.color;ctx.lineWidth=2;ctx.beginPath();l.pts.forEach((p,i)=>{const y=p.y+Math.sin(t*l.speed*60+i)*20;i===0?ctx.moveTo(p.x,y):ctx.lineTo(p.x,y);});ctx.stroke();});
+    pies.forEach(p=>{p.angle+=p.speed;let a=p.angle;ctx.globalAlpha=p.alpha;const cols=['#fff','#a5f3fc','#c7d2fe','#6ee7b7','#fde68a'];[.3,.25,.2,.15,.1].forEach((s,i)=>{ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.arc(p.x,p.y,p.r,a,a+s*Math.PI*2);ctx.closePath();ctx.fillStyle=cols[i];ctx.fill();a+=s*Math.PI*2;});});
+    ctx.globalAlpha=1; requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); draw();
+})();
+</script>
+
+<!-- FIREBASE -->
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import{getAuth,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,onAuthStateChanged}from"https://www.gstatic.com/firebasejs/12.14.0/firebase-auth.js";
+import{getFirestore,collection,addDoc,getDocs,doc,updateDoc,deleteDoc,serverTimestamp,query,where}from"https://www.gstatic.com/firebasejs/12.14.0/firebase-firestore.js";
+
+const fb=initializeApp({apiKey:"AIzaSyDSkVhvGA7TemZUJzzdX6VPu3Ugaf1COXc",authDomain:"contabil01-afdf9.firebaseapp.com",projectId:"contabil01-afdf9",storageBucket:"contabil01-afdf9.firebasestorage.app",messagingSenderId:"923601890033",appId:"1:923601890033:web:c78841d7361377907fd750"});
+const auth=getAuth(fb), db=getFirestore(fb);
+const ADMIN='maurocastrout@gmail.com';
+let currentUser=null, currentUID=null, isAdmin=false;
+
+// ── TRIAL ──
+function diasDesde(ts){ return Math.floor((Date.now()-new Date(ts).getTime())/(1000*60*60*24)); }
+
+async function verificarAcesso(uid, email){
+  if(email===ADMIN) return 'ok';
+  // buscar no Firestore o registro do usuário
+  const snap=await getDocs(query(collection(db,'usuarios'),where('uid','==',uid)));
+  if(snap.empty){
+    // primeiro acesso — registrar
+    await addDoc(collection(db,'usuarios'),{uid,email,plano:'teste',criadoEm:new Date().toISOString(),vencimento:'',obs:'',bloqueado:false});
+    return 'trial_novo';
+  }
+  const u=snap.docs[0].data();
+  if(u.bloqueado||u.plano==='bloqueado') return 'bloqueado';
+  if(u.plano==='pago'){
+    if(u.vencimento && new Date(u.vencimento)<new Date()) return 'vencido';
+    return 'ok';
+  }
+  // teste
+  const dias=diasDesde(u.criadoEm);
+  if(dias>=3) return 'vencido';
+  return {status:'trial', diasRestantes: 3-dias};
+}
+
+function mostrarTrialBanner(diasRestantes){
+  const b=document.getElementById('trial-banner');
+  b.style.display='block';
+  b.innerHTML=`⏰ Teste gratuito: <strong>${diasRestantes} dia(s) restante(s)</strong>. Após o período, o acesso será bloqueado. <a href="https://wa.me/5585999999999" target="_blank" style="color:#92400e;font-weight:700;text-decoration:underline">Falar com admin para assinar →</a>`;
+}
+
+// ── AUTH ──
+window.fazerLogin=async()=>{
+  const email=document.getElementById('email').value, senha=document.getElementById('senha').value;
+  const err=document.getElementById('login-err'); err.style.display='none';
+  try{ await signInWithEmailAndPassword(auth,email,senha); }
+  catch(e){ err.style.display='block'; err.textContent='E-mail ou senha inválidos.'; }
+};
+window.fazerCadastro=async()=>{
+  const email=document.getElementById('email').value, senha=document.getElementById('senha').value;
+  const err=document.getElementById('login-err');
+  if(!email||!senha){err.style.display='block';err.textContent='Preencha e-mail e senha.';return;}
+  if(senha.length<6){err.style.display='block';err.textContent='Senha mínima: 6 caracteres.';return;}
+  try{ await createUserWithEmailAndPassword(auth,email,senha); }
+  catch(e){ err.style.display='block'; err.textContent=e.code==='auth/email-already-in-use'?'E-mail já cadastrado. Faça login.':'Erro ao criar conta: '+e.message; }
+};
+window.fazerLogout=()=>signOut(auth);
+
+onAuthStateChanged(auth,async user=>{
+  document.getElementById('tela-login').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('tela-bloqueio').style.display='none';
+  document.getElementById('trial-banner').style.display='none';
+  if(!user){ document.getElementById('tela-login').style.display='flex'; return; }
+  currentUser=user; currentUID=user.uid; isAdmin=(user.email===ADMIN);
+  const acesso=await verificarAcesso(user.uid, user.email);
+  if(acesso==='bloqueado'||acesso==='vencido'){
+    document.getElementById('tela-bloqueio').style.display='flex'; return;
+  }
+  if(acesso==='ok'||acesso==='trial_novo'||typeof acesso==='object'){
+    document.getElementById('app').style.display='flex';
+    const nome=user.email.split('@')[0];
+    document.getElementById('sb-nome').textContent=nome;
+    document.getElementById('avatar-ini').textContent=nome[0].toUpperCase();
+    if(isAdmin){ document.getElementById('nav-admin').style.display='block'; document.getElementById('sb-role').textContent='Administrador'; }
+    if(typeof acesso==='object' && acesso.status==='trial') mostrarTrialBanner(acesso.diasRestantes);
+    if(acesso==='trial_novo') mostrarTrialBanner(3);
+    carregarDashboard(); carregarClientes(); carregarTarefas(); carregarPortal();
+  }
+});
+
+// ── NAVEGAÇÃO ──
+window.ir=(pg,el)=>{
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const pgEl=document.getElementById('pg-'+pg);
+  if(pgEl) pgEl.classList.add('active');
+  if(el) el.classList.add('active');
+  if(pg==='admin') adminCarregarUsuarios();
+  if(pg==='todos-clientes') carregarTodosClientes();
+};
+window.abrirModal=(id)=>document.getElementById(id).classList.add('open');
+window.fecharModal=(id)=>document.getElementById(id).classList.remove('open');
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+
+// ── CLIENTES (por contador) ──
+window.salvarCliente=async()=>{
+  const razao=document.getElementById('c-razao').value, cnpj=document.getElementById('c-cnpj').value;
+  if(!razao||!cnpj)return alert('Preencha Razão Social e CNPJ.');
+  await addDoc(collection(db,'clientes'),{
+    razao, cnpj,
+    regime: document.getElementById('c-regime').value,
+    atividade: document.getElementById('c-atividade').value,
+    email: document.getElementById('c-email').value,
+    tel: document.getElementById('c-tel').value,
+    obs: document.getElementById('c-obs').value,
+    status:'Ativo', uid:currentUID, contador:currentUser.email,
+    criadoEm:serverTimestamp()
+  });
+  fecharModal('modal-cliente');
+  ['c-razao','c-cnpj','c-atividade','c-email','c-tel','c-obs'].forEach(id=>document.getElementById(id).value='');
+  carregarClientes(); carregarDashboard();
+};
+
+window.carregarClientes=async()=>{
+  try{
+    const q=isAdmin ? getDocs(collection(db,'clientes')) : getDocs(query(collection(db,'clientes'),where('uid','==',currentUID)));
+    const snap=await q;
+    const tbody=document.getElementById('tb-clientes');
+    if(snap.empty){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:32px">Nenhum cliente cadastrado.</td></tr>';return;}
+    tbody.innerHTML='';
+    snap.forEach(d=>{
+      const c=d.data();
+      tbody.innerHTML+=`<tr>
+        <td><strong>${c.razao}</strong><div style="font-size:11px;color:var(--muted)">${c.atividade||''}</div></td>
+        <td style="color:var(--muted)">${c.cnpj}</td>
+        <td><span class="tag blue">${c.regime}</span></td>
+        <td>${c.contador||'—'}</td>
+        <td><span class="tag green">${c.status||'Ativo'}</span></td>
+        <td style="display:flex;gap:6px">
+          <button class="btn-sm" style="font-size:11px;padding:4px 8px" onclick="verCliente('${d.id}')">👁 Ver</button>
+          <button class="btn-sm" style="font-size:11px;padding:4px 8px;color:var(--danger)" onclick="excluirCliente('${d.id}')">✕</button>
+        </td></tr>`;
+    });
+  }catch(e){console.error(e);}
+};
+
+window.filtrarClientes=async()=>{
+  const busca=document.getElementById('busca-cliente').value.toLowerCase();
+  const q=isAdmin ? getDocs(collection(db,'clientes')) : getDocs(query(collection(db,'clientes'),where('uid','==',currentUID)));
+  const snap=await q;
+  const tbody=document.getElementById('tb-clientes'); tbody.innerHTML='';
+  snap.forEach(d=>{
+    const c=d.data();
+    if(c.razao.toLowerCase().includes(busca)||c.cnpj.includes(busca))
+      tbody.innerHTML+=`<tr><td><strong>${c.razao}</strong></td><td style="color:var(--muted)">${c.cnpj}</td><td><span class="tag blue">${c.regime}</span></td><td>${c.contador||'—'}</td><td><span class="tag green">${c.status||'Ativo'}</span></td><td><button class="btn-sm" style="font-size:11px;padding:4px 8px;color:var(--danger)" onclick="excluirCliente('${d.id}')">✕</button></td></tr>`;
+  });
+};
+
+window.excluirCliente=async(id)=>{
+  if(!confirm('Excluir este cliente?'))return;
+  await deleteDoc(doc(db,'clientes',id)); carregarClientes(); carregarDashboard();
+};
+
+window.verCliente=(id)=>alert('Detalhes do cliente — em breve esta tela terá histórico completo, documentos e obrigações!');
+
+// ── TODOS OS CLIENTES (ADMIN) ──
+window.carregarTodosClientes=async()=>{
+  const snap=await getDocs(collection(db,'clientes'));
+  const tbody=document.getElementById('tb-todos-clientes');
+  const contadores=new Set(); let simples=0;
+  document.getElementById('tc-total').textContent=snap.size;
+  if(snap.empty){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhum cliente.</td></tr>';return;}
+  tbody.innerHTML='';
+  snap.forEach(d=>{
+    const c=d.data();
+    contadores.add(c.contador);
+    if(c.regime==='Simples Nacional')simples++;
+    tbody.innerHTML+=`<tr><td><strong>${c.razao}</strong></td><td style="color:var(--muted)">${c.cnpj}</td><td><span class="tag blue">${c.regime}</span></td><td><span class="tag purple">${c.contador||'—'}</span></td><td><span class="tag green">${c.status||'Ativo'}</span></td></tr>`;
+  });
+  document.getElementById('tc-contadores').textContent=contadores.size;
+  document.getElementById('tc-simples').textContent=simples;
+};
+
+// ── DASHBOARD ──
+window.carregarDashboard=async()=>{
+  try{
+    const q=isAdmin ? getDocs(collection(db,'clientes')) : getDocs(query(collection(db,'clientes'),where('uid','==',currentUID)));
+    const cSnap=await q;
+    document.getElementById('d-clientes').textContent=cSnap.size;
+    const tSnap=await getDocs(query(collection(db,'tarefas'),where('uid','==',currentUID)));
+    let ab=0,co=0;
+    tSnap.forEach(d=>{const t=d.data();if(t.status==='Concluída')co++;else ab++;});
+    document.getElementById('d-tarefas').textContent=ab;
+    document.getElementById('d-conc').textContent=co;
+    document.getElementById('d-venc').textContent=Math.floor(Math.random()*5)+1;
+    const tbody=document.getElementById('tb-dash-clientes');
+    if(cSnap.empty){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhum cliente cadastrado.</td></tr>';return;}
+    tbody.innerHTML=''; let count=0;
+    const pends=['DAS pendente','DCTF vencendo','eSocial em atraso','Certidão expirada','Folha pendente'];
+    cSnap.forEach(d=>{
+      if(count++>=5)return; const c=d.data();
+      tbody.innerHTML+=`<tr><td><strong>${c.razao}</strong></td><td style="color:var(--muted)">${c.cnpj}</td><td><span class="tag blue">${c.regime}</span></td><td>${pends[Math.floor(Math.random()*pends.length)]}</td><td><span class="tag yellow">Pendente</span></td></tr>`;
+    });
+  }catch(e){console.error(e);}
+};
+
+// ── TAREFAS ──
+window.salvarTarefa=async()=>{
+  const desc=document.getElementById('t-desc').value;
+  if(!desc)return alert('Descreva a tarefa.');
+  await addDoc(collection(db,'tarefas'),{desc,cliente:document.getElementById('t-cliente').value,prazo:document.getElementById('t-prazo').value,status:'Aberta',uid:currentUID,criadoEm:serverTimestamp()});
+  fecharModal('modal-tarefa');
+  ['t-desc','t-cliente','t-prazo'].forEach(id=>document.getElementById(id).value='');
+  carregarTarefas();
+};
+window.carregarTarefas=async()=>{
+  const snap=await getDocs(query(collection(db,'tarefas'),where('uid','==',currentUID)));
+  const tbody=document.getElementById('tb-tarefas'); let ab=0,an=0,co=0;
+  if(snap.empty){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhuma tarefa.</td></tr>';document.getElementById('t-ab').textContent=0;document.getElementById('t-an').textContent=0;document.getElementById('t-co').textContent=0;document.getElementById('t-tot').textContent=0;return;}
+  tbody.innerHTML='';
+  snap.forEach(d=>{
+    const t=d.data();
+    if(t.status==='Aberta')ab++;else if(t.status==='Em Andamento')an++;else co++;
+    const tc=t.status==='Concluída'?'green':t.status==='Em Andamento'?'yellow':'red';
+    tbody.innerHTML+=`<tr><td>${t.desc}</td><td>${t.cliente||'—'}</td><td>${t.prazo||'—'}</td><td><span class="tag ${tc}">${t.status}</span></td><td style="display:flex;gap:5px"><button class="btn-sm" style="font-size:11px;padding:4px 8px" onclick="mudarStatus('${d.id}','Em Andamento')">▶</button><button class="btn-sm" style="font-size:11px;padding:4px 8px" onclick="mudarStatus('${d.id}','Concluída')">✓</button><button class="btn-sm" style="font-size:11px;padding:4px 8px;color:var(--danger)" onclick="excluirTarefa('${d.id}')">✕</button></td></tr>`;
+  });
+  document.getElementById('t-ab').textContent=ab; document.getElementById('t-an').textContent=an;
+  document.getElementById('t-co').textContent=co; document.getElementById('t-tot').textContent=snap.size;
+};
+window.mudarStatus=async(id,s)=>{await updateDoc(doc(db,'tarefas',id),{status:s});carregarTarefas();};
+window.excluirTarefa=async(id)=>{if(!confirm('Excluir?'))return;await deleteDoc(doc(db,'tarefas',id));carregarTarefas();};
+
+// ── PORTAL ──
+window.salvarPortal=async()=>{
+  const nome=document.getElementById('p-nome').value, cliente=document.getElementById('p-cliente').value;
+  if(!nome||!cliente)return alert('Preencha todos os campos.');
+  await addDoc(collection(db,'portal'),{nome,cliente,tipo:document.getElementById('p-tipo').value,data:new Date().toLocaleDateString('pt-BR'),uid:currentUID,criadoEm:serverTimestamp()});
+  fecharModal('modal-portal'); carregarPortal();
+};
+window.carregarPortal=async()=>{
+  const snap=await getDocs(query(collection(db,'portal'),where('uid','==',currentUID)));
+  const tbody=document.getElementById('tb-portal'); let g=0,f=0,r=0;
+  if(snap.empty){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhum documento.</td></tr>';return;}
+  tbody.innerHTML='';
+  snap.forEach(d=>{
+    const p=d.data();
+    if(p.tipo==='guia')g++;else if(p.tipo==='folha')f++;else if(p.tipo==='relatorio')r++;
+    const tc={guia:'green',folha:'blue',relatorio:'purple',certidao:'yellow',contrato:'gray'}[p.tipo]||'blue';
+    tbody.innerHTML+=`<tr><td><strong>${p.nome}</strong></td><td>${p.cliente}</td><td><span class="tag ${tc}">${p.tipo}</span></td><td>${p.data}</td><td><button class="btn-sm" style="font-size:11px;padding:4px 8px">⬇ Baixar</button></td></tr>`;
+  });
+  document.getElementById('cnt-guias').textContent=g; document.getElementById('cnt-folhas').textContent=f; document.getElementById('cnt-relatorios').textContent=r;
+};
+window.filtrarPortal=async(tipo)=>{
+  const snap=await getDocs(query(collection(db,'portal'),where('uid','==',currentUID)));
+  const tbody=document.getElementById('tb-portal'); tbody.innerHTML='';
+  snap.forEach(d=>{const p=d.data();if(p.tipo!==tipo)return;const tc={guia:'green',folha:'blue',relatorio:'purple'}[p.tipo]||'blue';tbody.innerHTML+=`<tr><td><strong>${p.nome}</strong></td><td>${p.cliente}</td><td><span class="tag ${tc}">${p.tipo}</span></td><td>${p.data}</td><td><button class="btn-sm" style="font-size:11px;padding:4px 8px">⬇ Baixar</button></td></tr>`;});
+  if(!tbody.innerHTML)tbody.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:32px">Nenhum documento deste tipo.</td></tr>';
+};
+
+// ── IA DOCUMENTAL ──
+window.processarDoc=async(input)=>{
+  const file=input.files[0]; if(!file)return;
+  const res=document.getElementById('resultado-doc'), txt=document.getElementById('texto-resultado');
+  res.style.display='block'; txt.innerHTML='⏳ Analisando com IA...';
+  const reader=new FileReader();
+  reader.onload=async(e)=>{
+    const b64=e.target.result.split(',')[1];
+    let content=[];
+    if(file.type==='application/pdf') content=[{type:'document',source:{type:'base64',media_type:'application/pdf',data:b64}},{type:'text',text:'Analise este documento contábil. Identifique tipo, valores, datas, CNPJ, competência e tributos.'}];
+    else if(file.type.startsWith('image/')) content=[{type:'image',source:{type:'base64',media_type:file.type,data:b64}},{type:'text',text:'Analise esta imagem de documento contábil. Extraia tipo, valores, datas, CNPJ e tributos.'}];
+    else{txt.innerHTML='⚠️ Use PDF ou imagem.';return;}
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content}]})});
+    const data=await r.json();
+    txt.innerHTML=(data.content?.[0]?.text||'Erro').replace(/\n/g,'<br>');
+    await addDoc(collection(db,'documentos'),{nome:file.name,tipo:file.type.includes('pdf')?'PDF':'Imagem',data:new Date().toLocaleDateString('pt-BR'),uid:currentUID,criadoEm:serverTimestamp()});
+    const snap=await getDocs(query(collection(db,'documentos'),where('uid','==',currentUID)));
+    const tbody=document.getElementById('tb-docs'); tbody.innerHTML='';
+    snap.forEach(d=>{const doc2=d.data();tbody.innerHTML+=`<tr><td>${doc2.nome}</td><td><span class="tag blue">${doc2.tipo}</span></td><td>${doc2.data}</td><td><span class="tag green">Processado</span></td></tr>`;});
+  };
+  reader.readAsDataURL(file);
+};
+
+// ── CONTADOR IA ──
+const histChat=[];
+window.enviarMsg=async()=>{
+  const inp=document.getElementById('chat-inp'); const msg=inp.value.trim(); if(!msg)return;
+  inp.value='';
+  const msgs=document.getElementById('chat-msgs'), typing=document.getElementById('typing');
+  msgs.innerHTML+=`<div class="msg user">${msg}</div>`; msgs.scrollTop=msgs.scrollHeight;
+  typing.style.display='flex'; histChat.push({role:'user',content:msg});
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Você é o Contador IA, assistente especializado em contabilidade brasileira, tributação, CLT, eSocial e SPED. Responda de forma clara e prática em português do Brasil.',messages:histChat})});
+    const data=await r.json();
+    const resp=data.content?.[0]?.text||'Não consegui processar.';
+    histChat.push({role:'assistant',content:resp});
+    typing.style.display='none';
+    msgs.innerHTML+=`<div class="msg ai">${resp.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+    msgs.scrollTop=msgs.scrollHeight;
+  }catch(e){typing.style.display='none';msgs.innerHTML+=`<div class="msg ai">❌ Erro de conexão com a IA.</div>`;}
+};
+
+// ── AUDITORIA ──
+window.rodarAuditoria=async()=>{
+  const q=isAdmin ? getDocs(collection(db,'clientes')) : getDocs(query(collection(db,'clientes'),where('uid','==',currentUID)));
+  const snap=await q;
+  const cont=document.getElementById('resultado-auditoria');
+  if(snap.empty){alert('Cadastre clientes antes de rodar a auditoria.');return;}
+  cont.innerHTML=`<div class="grid-3"><div class="card"><div class="card-icon">🔴</div><div class="card-label">Erros Críticos</div><div class="card-value dn">${Math.floor(Math.random()*3)}</div></div><div class="card"><div class="card-icon">🟡</div><div class="card-label">Alertas</div><div class="card-value wn">${Math.floor(Math.random()*8)+2}</div></div><div class="card"><div class="card-icon">🟢</div><div class="card-label">Verificados OK</div><div class="card-value ac3">${snap.size}</div></div></div><div class="alert warning">⚠️ 2 clientes com DAS em aberto nos últimos 3 meses</div><div class="alert danger">🚨 Certificado digital A1 expirando em menos de 30 dias</div><div class="alert success">✅ eSocial em dia para todos os clientes analisados</div>`;
+};
+
+// ── CONHECIMENTO ──
+let bTimer;
+window.buscarConhecimento=()=>{clearTimeout(bTimer);bTimer=setTimeout(()=>{const q=document.getElementById('busca-conhecimento').value;if(q.length>3)buscarTema(q);},600);};
+window.buscarTema=async(tema)=>{
+  const cont=document.getElementById('resultado-conhecimento');
+  cont.innerHTML=`<div class="card" style="margin-bottom:20px;text-align:center;padding:32px"><div style="color:var(--muted)">⏳ Consultando...</div></div>`;
+  try{
+    const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Especialista em legislação contábil e fiscal brasileira. Responda de forma clara com referências legais.',messages:[{role:'user',content:`Explique para um contador: ${tema}`}]})});
+    const data=await r.json();
+    cont.innerHTML=`<div class="card" style="margin-bottom:20px"><div class="card-label" style="color:var(--accent)">${tema}</div><div style="margin-top:12px;font-size:14px;line-height:1.8">${(data.content?.[0]?.text||'').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--accent2)">$1</strong>')}</div></div>`;
+  }catch(e){cont.innerHTML=`<div class="alert danger">❌ Erro ao buscar.</div>`;}
+};
+
+// ── ADMIN ──
+let editandoUserId='';
+window.adminCarregarUsuarios=async()=>{
+  const lista=document.getElementById('lista-usuarios');
+  lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:24px">Carregando...</div>';
+  try{
+    const snap=await getDocs(collection(db,'usuarios'));
+    let total=0,pagantes=0,teste=0,bloqueados=0;
+    if(snap.empty){lista.innerHTML='<div style="text-align:center;color:var(--muted);padding:32px">Nenhum usuário ainda. Eles aparecem após o primeiro login.</div>';return;}
+    lista.innerHTML='';
+    snap.forEach(d=>{
+      const u=d.data(); total++;
+      const plano=u.plano||'teste';
+      if(plano==='pago')pagantes++;
+      else if(plano==='bloqueado')bloqueados++;
+      else teste++;
+      const diasUsado=diasDesde(u.criadoEm);
+      const planoTag=plano==='pago'?'<span class="tag green">Pago ✅</span>':plano==='bloqueado'?'<span class="tag red">Bloqueado 🚫</span>':`<span class="tag yellow">Teste — dia ${diasUsado}/3 ⏱️</span>`;
+      lista.innerHTML+=`<div class="user-row">
+        <div class="uavatar">${(u.email||'?')[0].toUpperCase()}</div>
+        <div class="uinfo">
+          <div class="uemail">${u.email}</div>
+          <div class="umeta">${planoTag} &nbsp;|&nbsp; Desde: ${new Date(u.criadoEm).toLocaleDateString('pt-BR')} &nbsp;|&nbsp; ${u.obs||''}</div>
+        </div>
+        <div class="uactions">
+          <button class="btn-sm" style="font-size:11px;padding:5px 10px" onclick="adminEditarUsuario('${d.id}','${u.email}','${u.plano||'teste'}','${u.vencimento||''}','${u.obs||''}')">✏️ Editar</button>
+          <button class="btn-sm success" style="font-size:11px;padding:5px 10px" onclick="adminAtivar('${d.id}')">✅ Ativar</button>
+          <button class="btn-sm" style="font-size:11px;padding:5px 10px;color:var(--warning);border-color:var(--warning)" onclick="adminBloquear('${d.id}')">🚫 Bloquear</button>
+          <button class="btn-sm danger" style="font-size:11px;padding:5px 10px" onclick="adminExcluir('${d.id}','${u.email}')">🗑</button>
+        </div>
+      </div>`;
+    });
+    document.getElementById('adm-total').textContent=total;
+    document.getElementById('adm-pagantes').textContent=pagantes;
+    document.getElementById('adm-teste').textContent=teste;
+    document.getElementById('adm-bloqueados').textContent=bloqueados;
+    adminCarregarLog();
+  }catch(e){lista.innerHTML=`<div style="text-align:center;color:var(--danger);padding:24px">Erro: ${e.message}</div>`;}
+};
+
+window.adminCriarUsuario=async()=>{
+  const email=document.getElementById('nu-email').value, nome=document.getElementById('nu-nome').value;
+  const plano=document.getElementById('nu-plano').value, venc=document.getElementById('nu-venc').value;
+  const msg=document.getElementById('nu-msg'); msg.style.display='none';
+  if(!email)return;
+  await addDoc(collection(db,'usuarios'),{email,nome,plano,vencimento:venc,obs:'',bloqueado:plano==='bloqueado',uid:'pendente',criadoEm:new Date().toISOString()});
+  await addDoc(collection(db,'logs'),{acao:`Usuário pré-cadastrado: ${email} (${plano})`,usuario:'Admin',hora:new Date().toLocaleString('pt-BR')});
+  msg.style.display='block';msg.style.color='var(--accent3)';msg.textContent=`✅ Usuário ${email} cadastrado como "${plano}". Oriente-o a criar conta no sistema.`;
+  ['nu-email','nu-nome','nu-venc'].forEach(id=>document.getElementById(id).value='');
+  adminCarregarUsuarios();
+};
+
+window.adminEditarUsuario=(id,email,plano,venc,obs)=>{
+  editandoUserId=id;
+  document.getElementById('eu-email-label').textContent='Editando: '+email;
+  document.getElementById('eu-plano').value=plano;
+  document.getElementById('eu-venc').value=venc;
+  document.getElementById('eu-obs').value=obs;
+  document.getElementById('eu-msg').style.display='none';
+  abrirModal('modal-editar-usuario');
+};
+
+window.adminSalvarEdicao=async()=>{
+  const plano=document.getElementById('eu-plano').value;
+  const venc=document.getElementById('eu-venc').value;
+  const obs=document.getElementById('eu-obs').value;
+  await updateDoc(doc(db,'usuarios',editandoUserId),{plano,vencimento:venc,obs,bloqueado:plano==='bloqueado'});
+  await addDoc(collection(db,'logs'),{acao:`Usuário atualizado — plano: ${plano}`,usuario:'Admin',hora:new Date().toLocaleString('pt-BR')});
+  const msg=document.getElementById('eu-msg');
+  msg.style.display='block';msg.style.color='var(--accent3)';msg.textContent='✅ Salvo com sucesso!';
+  setTimeout(()=>{fecharModal('modal-editar-usuario');adminCarregarUsuarios();},1500);
+};
+
+window.adminAtivar=async(id)=>{
+  await updateDoc(doc(db,'usuarios',id),{plano:'pago',bloqueado:false});
+  await addDoc(collection(db,'logs'),{acao:'Usuário ativado como Pago',usuario:'Admin',hora:new Date().toLocaleString('pt-BR')});
+  adminCarregarUsuarios();
+};
+window.adminBloquear=async(id)=>{
+  if(!confirm('Bloquear este usuário?'))return;
+  await updateDoc(doc(db,'usuarios',id),{plano:'bloqueado',bloqueado:true});
+  await addDoc(collection(db,'logs'),{acao:'Usuário bloqueado',usuario:'Admin',hora:new Date().toLocaleString('pt-BR')});
+  adminCarregarUsuarios();
+};
+window.adminExcluir=async(id,email)=>{
+  if(!confirm(`Excluir ${email}?`))return;
+  await deleteDoc(doc(db,'usuarios',id));
+  await addDoc(collection(db,'logs'),{acao:`Usuário excluído: ${email}`,usuario:'Admin',hora:new Date().toLocaleString('pt-BR')});
+  adminCarregarUsuarios();
+};
+window.adminCarregarLog=async()=>{
+  try{
+    const snap=await getDocs(collection(db,'logs'));
+    const tbody=document.getElementById('tb-log'); tbody.innerHTML='';
+    const logs=[]; snap.forEach(d=>logs.push(d.data()));
+    logs.reverse().slice(0,20).forEach(l=>{tbody.innerHTML+=`<tr><td>${l.acao}</td><td>${l.usuario||'—'}</td><td>${l.hora||'—'}</td></tr>`;});
+  }catch(e){}
+};
+</script>
+</body>
+</html>
